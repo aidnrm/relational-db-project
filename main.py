@@ -5,13 +5,18 @@ import shlex
 
 def main():
     """
-    This script provides a command-line interface for querying data from a SQLite database.
+    This function provides a command-line interface for querying data from a SQLite database.
 
-    The script starts by checking if a file named 'wealth.db' exists in the current directory. 
+    The function starts by checking if a file named 'wealth.db' exists in the current directory. 
+    It then enters into an infinite loop, where it accepts user inputs. 
     
-    The user is then prompted to input a command. 
-    If the data has not been loaded (i.e., data_loaded == False), the user is prompted to either type 'help' for more information, 'exit' to quit the program, or 'load data' 
-    to load data into the database. If the user enters anything other than 'load data', they are prompted to enter 'load data'.
+    If the data is not loaded, the user must type 'load data' to load the data from the file. 
+    If the data has not been loaded, the user is prompted to either type 'help' for more information,
+    'exit' to quit the program, or 'load data' to load data into the database. 
+
+    If the user types an empty string, the function prompts the user to enter a query. 
+    Otherwise, the function calls the parse function to process input and execute the query. 
+    The function continues to prompt the user for input until the user types 'exit'.
     """
     # check if data is loaded 
     if os.path.isfile('wealth.db'):
@@ -57,13 +62,18 @@ def main():
 
 
 def parse(input):
-    ''' 
-    Takes users input, utilizes the shlex library to split the words from the user input and sends it to the do_query function. 
-    
-            Parameter: 
-                (string): A string for the users query 
-    '''
-
+    """
+    This function parses user input and returns a list of words in the input. 
+    Words enclosed in quotes are treated a single element in the list. The function also
+    validates the input against pre-defined commands and executes based on the input
+     
+    Parameters:
+     input (str): Represents user's input
+      
+    Returns:
+     A list of words for input to the do_query functions query_type param.
+     Matches the input to the predefined commands, do_query function is then executed with as the arg param. 
+    """
     # Returns a list of all the words, words in quotes such as "New York" are added to a list as ['New York']
     input_list = shlex.split(input)
 
@@ -142,24 +152,20 @@ def parse(input):
         invalid()
 
 
-# do query
-    # query type --
-    # the possible query types are...
-    # wealthiest billionaire [country],
-    # num billionaire, num billionaire [country], num billionaire nationality [name], num country
-    # networth [name]
-    # nationality [name]
-    # bday [date]
-    # age [name]
-    # most billionaire, most num billionaire
-def do_query(query_type, arg):
-    ''' '''
 
+def do_query(query_type, arg):
+    """
+    This do_query function takes query_type and arg, and performs queries based on the input.
+    do_query connects to the wealth.db, performing the queries based on the input. 
+    
+    Parameters:
+     query_type (str): Type of query to be performed
+     arg (str): The argument to be passed to the query
+    """
+    
     con = sql.connect('wealth.db')
     cur = con.cursor()
-    #found the query!
-    found = True
-
+    
     if query_type == "wealthiest billionaire [country]":
         cur.execute(f"SELECT name from richest where nationality = '{arg}' COLLATE NOCASE limit 1;")
         output = cur.fetchall()
@@ -254,7 +260,7 @@ def do_query(query_type, arg):
 
 
 def helper():
-    ''' Function prents how to use this program when called. '''
+    ''' Function prints how to use this program when called. '''
 
     print("Welcome to the Wealth Database -- a database about the wealthiest people in the world.\n")
     print("The keywords in this system are: \"country\", \"wealthiest\", \"billionaire\", \"bday\" , \"nationality\", \"age\", \"most\", \"num\"")
