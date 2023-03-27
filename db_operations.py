@@ -48,6 +48,5 @@ class db_operations:
     # Changes csv to dataframe
     # Writes the data stored in the dataframe to sql database
     def csv_to_table(self, filename, tablename):
-        #path = os.path.join('backend', filename)
         data_frame = pd.read_csv(f'backend\\{filename}')
         data_frame.to_sql(tablename, self.conn, if_exists='replace', index=False)

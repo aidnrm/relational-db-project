@@ -1,12 +1,18 @@
 from db_operations import db_operations
-import sys
 import os
 import sqlite3 as sql
-import pandas as pd
 import shlex
 
 def main():
+    """
+    This script provides a command-line interface for querying data from a SQLite database.
 
+    The script starts by checking if a file named 'wealth.db' exists in the current directory. 
+    
+    The user is then prompted to input a command. 
+    If the data has not been loaded (i.e., data_loaded == False), the user is prompted to either type 'help' for more information, 'exit' to quit the program, or 'load data' 
+    to load data into the database. If the user enters anything other than 'load data', they are prompted to enter 'load data'.
+    """
     # check if data is loaded 
     if os.path.isfile('wealth.db'):
         data_loaded = True
@@ -16,8 +22,9 @@ def main():
     while True:
         db_data = db_operations()
         user_input = input('=>')
-        #if data is not loaded 
-        while data_loaded==False:
+
+        # while data is not loaded
+        while data_loaded == False:
             if user_input.lower() == "help":
                 helper()
                 user_input = input('=>')
@@ -39,7 +46,6 @@ def main():
             found = False
             while not found:
                 if user_input.lower() == 'help':
-                    # Call helper function that explains stuff
                     helper()
                     user_input = input('=>')
                 elif user_input == '':
@@ -51,36 +57,35 @@ def main():
 
 
 def parse(input):
+    ''' 
+    Takes users input, utilizes the shlex library to split the words from the user input and sends it to the do_query function. 
+    
+            Parameter: 
+                (string): A string for the users query 
+    '''
 
-    #  ***********PARSER STUFF*************
-    #changed this part from camel case to snake
-    # SHLEX RETURNS A LIST OF ALL THE WORDS, WORDS IN QUOTES such as "New York" GET ADDED TO LIST AS ['New York']
+    # Returns a list of all the words, words in quotes such as "New York" are added to a list as ['New York']
     input_list = shlex.split(input)
-    # We need to add user feedback after each keyword.
 
-    #first word must be "wealthiest", "num", "networth", "nationality", "bday", "age", "most"
-    # no input_list should have over 4 elements
     if input_list[0] == "exit":
         exit()
+    
     if (len(input_list) > 4 or len(input_list)<2) :
         invalid()
-    #first word is "wealthiest"
+    
+    # First word is "wealthiest", second is "billionaire", third is "country"
     elif input_list[0] == 'wealthiest':
-        #second word must be "billionaire"
         if input_list[1] == 'billionaire':
-            #third word must be [country]
-            #check length
             if len(input_list) == 3:
                 do_query("wealthiest billionaire [country]", input_list[2])
             else:
                 invalid()
         else:
             invalid()
-    #first word is "num"
+    
+    #first word is "num", second is "billionaire" or "country", third is 
     elif input_list[0] == 'num':
-        #second word must be "billionaire", "country"
         if input_list[1] == "billionaire":
-            #third word must be [], [country], "nationality"
             if len(input_list) == 2:
                 do_query("num billionaire", "")
             elif len(input_list) == 3:
@@ -93,41 +98,40 @@ def parse(input):
             do_query("num country", "")
         else:
             invalid()
-    #first word is "networth"
+
+    #first word is "networth", second is "name"
     elif input_list[0] == 'networth':
-        #second word must be [name]
         if len(input_list) == 2:
             do_query("networth [name]", input_list[1])
         else:
             invalid()
-    #first word is "nationality"
+
+    #first word is "nationality", second is "name"
     elif input_list[0] == 'nationality':
-        #second word must be [name]
         if len(input_list) == 2:
             do_query("nationality [name]", input_list[1])
         else:
             invalid()
-    #first word is "bday"
+
+    #first word is "bday", second is "date"
     elif input_list[0] == 'bday':
-        #second word must be [date]
         if len(input_list) == 2:
             do_query("bday [date]", input_list[1])
         else:
             invalid()
-    #first word is "age"
+
+    #first word is "age", second word is "name"
     elif input_list[0] == 'age':
-        #second word is [name]
         if len(input_list) == 2:
             do_query("age [name]", input_list[1])
         else:
             invalid()
-    #first word is "most"
+
+    #first word is "most", second is "billionair" or "num"
     elif input_list[0] == 'most':
-        #second word must be "billionaire", "num"
         if input_list[1] == "billionaire":    
             do_query("most billionaire", "")
         elif input_list[1] == "num":
-            #third word must be billionaire
             if input_list[2] == "billionaire":
                 do_query("most num billionaire", "")
             else:
@@ -138,7 +142,7 @@ def parse(input):
         invalid()
 
 
-#TODO: do query
+# do query
     # query type --
     # the possible query types are...
     # wealthiest billionaire [country],
@@ -149,11 +153,13 @@ def parse(input):
     # age [name]
     # most billionaire, most num billionaire
 def do_query(query_type, arg):
+    ''' '''
+
     con = sql.connect('wealth.db')
     cur = con.cursor()
     #found the query!
     found = True
-    # TODO: Wealthiest billionaire in  specific country
+
     if query_type == "wealthiest billionaire [country]":
         cur.execute(f"SELECT name from richest where nationality = '{arg}' COLLATE NOCASE limit 1;")
         output = cur.fetchall()
@@ -162,7 +168,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]}")
 
-    # TODO: Number of billionaires per specific country
     elif query_type == "num billionaire [country]":
         cur.execute(f"SELECT num_billionaires FROM num_billionaires where country = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -171,7 +176,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} billionaires in {arg}")
 
-    # TODO: Num billionaires total
     elif query_type == "num billionaire":
         cur.execute(f"SELECT count(DISTINCT name) from richest;")
         output = cur.fetchall()
@@ -180,7 +184,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} billionaires total")
 
-    # TODO: Num country total
     elif query_type == "num country":
         cur.execute(f"SELECT count(DISTINCT country) from num_billionaires;")
         output = cur.fetchall()
@@ -189,7 +192,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} countries total")
 
-    # TODO: Networth of person
     elif query_type == "networth [name]":
         cur.execute(f"SELECT net_worth from richest where name = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -198,7 +200,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]}")
 
-    # TODO: Nationality of person
     elif query_type == "nationality [name]":
         cur.execute(f"SELECT nationality from richest where name = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -207,7 +208,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]}")
 
-    # TODO: Num Nationality of person - join of tables
     elif query_type == "num billionaire nationality [name]":
         cur.execute(f"SELECT num_billionaires FROM num_billionaires join richest on country = nationality where name = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -216,7 +216,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} billionaires")
 
-    # TODO: Birthday
     elif query_type == "bday [date]":
         cur.execute(f"SELECT name from richest where bday = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -226,7 +225,6 @@ def do_query(query_type, arg):
             for person in output:
                 print(f"{person[0]}\n")
 
-    # TODO: Age
     elif query_type == "age [name]":
         cur.execute(f"SELECT age FROM richest where name = '{arg}' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -235,7 +233,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} years old")
 
-    # TODO: most billionaire
     elif query_type == "most billionaire":
         cur.execute(f"SELECT country, max(billionaire_per_million) from num_billionaires;")
         output = cur.fetchall()
@@ -244,7 +241,6 @@ def do_query(query_type, arg):
         else:
             print(f"{output[0][0]} has {output[0][1]} billionaires per million")
 
-    # TODO: Most num billionaire
     elif query_type == "most num billionaire":
         cur.execute(f"SELECT country, max(num_billionaires) from num_billionaires where country != 'World' COLLATE NOCASE;")
         output = cur.fetchall()
@@ -257,8 +253,9 @@ def do_query(query_type, arg):
         print("something went wrong!")
 
 
-# TODO: Help function to explain the code 
 def helper():
+    ''' Function prents how to use this program when called. '''
+
     print("Welcome to the Wealth Database -- a database about the wealthiest people in the world.\n")
     print("The keywords in this system are: \"country\", \"wealthiest\", \"billionaire\", \"bday\" , \"nationality\", \"age\", \"most\", \"num\"")
     print("Please put quotation marks around names and country names and dates and make sure to capatalize (ex: \"Elon Musk\")\n")
@@ -274,7 +271,6 @@ def helper():
     print("age [Name] -- returns age of given billionaire")
     print("most billionaire -- returns country with highest number of billionaires per million people")
     print("most num billionaire -- returns country with the most billionaires")
-
 
 
 def invalid():
